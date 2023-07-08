@@ -141,8 +141,6 @@ if __name__ == "__main__":
         2: ["Murano Street Cheviot Laundry", "https://www.circuit.co.uk/circuit-view/laundry-site/?site=6239"]
     }
 
-    URL = None
-
     print('Laundry Scrapper')
     print('Supported Laundry Rooms:')
     for key, value in laundry_rooms.items():
