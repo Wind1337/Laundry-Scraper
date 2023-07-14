@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from collections import Counter
+from datetime import datetime
 import re
 import sys
 
@@ -43,6 +44,7 @@ def clean_contents(p_tag):
 
 def process_sections(sections):
     status_counter = Counter()
+    completion_times = []
 
     # Loop through each section and extract the information
     for section in sections:
@@ -64,12 +66,19 @@ def process_sections(sections):
                     duration = span_tag.text.strip()
                     break
 
+        # Extract expected completion time
+        if 'Expected completion time' in p_contents:
+            match = re.search(r'\d{2}:\d{2}', p_contents)
+            if match:
+                completion_time = datetime.strptime(match.group(), '%H:%M').time()
+                completion_times.append(completion_time)
+
         print(f"\n{title}, Status: {status}")
         print(p_contents)
         if duration:
             print(f"Duration: {duration}")
 
-    return status_counter
+    return status_counter, completion_times
 
 
 class LaundryScraper:
@@ -103,7 +112,7 @@ class LaundryScraper:
             washer_sections = self.driver.find_elements(By.CSS_SELECTOR,
                                                         'section.accordions--circuit-view:nth-of-type(1) div.accordion')
 
-            washer_status_counter = process_sections(washer_sections)
+            washer_status_counter, washer_completion_times = process_sections(washer_sections)
 
             # Click on the anchor tag with text "View Dryers"
             dryers_button = WebDriverWait(self.driver, 10).until(
@@ -115,7 +124,7 @@ class LaundryScraper:
             dryer_sections = self.driver.find_elements(By.CSS_SELECTOR,
                                                        'section.accordions--circuit-view:nth-of-type(2) div.accordion')
 
-            dryer_status_counter = process_sections(dryer_sections)
+            dryer_status_counter, dryer_completion_times = process_sections(dryer_sections)
 
             # Print the washer status counts
             print("\nWasher Status Counts:")
@@ -126,6 +135,19 @@ class LaundryScraper:
             print("\nDryer Status Counts:")
             for status, count in dryer_status_counter.items():
                 print(f"{status}: {count}")
+
+            # Check if "Washer Available" or "Dryer Available" is present
+            if 'Washer Available' not in washer_status_counter:
+                # Print the earliest expected completion time
+                if washer_completion_times:
+                    earliest_completion_time = min(washer_completion_times)
+                    print(f"\nEarliest Expected Washer Completion Time: {earliest_completion_time.strftime('%H:%M')}")
+
+            if 'Dryer Available' not in dryer_status_counter:
+                # Print the earliest expected completion time
+                if dryer_completion_times:
+                    earliest_completion_time = min(dryer_completion_times)
+                    print(f"\nEarliest Expected Dryer Completion Time: {earliest_completion_time.strftime('%H:%M')}")
 
         finally:
             # Close the browser
