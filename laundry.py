@@ -19,10 +19,10 @@ def get_status(section):
         status = 'Cycle Complete'
     elif 'accordion__title--in-use' in parent_div_class:
         status = 'In Use'
-    elif 'accordion__title' in parent_div_class:
-        status = 'Washer Available'
     elif 'accordion__title--dryer' in parent_div_class:
         status = 'Dryer Available'
+    elif 'accordion__title' in parent_div_class:
+        status = 'Washer Available'
     else:
         status = 'Unknown'
 
