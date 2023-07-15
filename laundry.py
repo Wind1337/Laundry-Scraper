@@ -185,7 +185,15 @@ if __name__ == "__main__":
 
     # Instantiate and run the scraper
     if is_android:
+        '''
+        We do not need to specify the chrome driver path for Android Termux
+        Installation: https://github.com/luanon404/Selenium-On-Termux-Android#installation
+        > Using Selenium with a Headless Desktop WebDriver
+        '''
         scraper = LaundryScraper(laundry_rooms[option][1])
     else:
+        '''
+        Place chromedriver in script root dir or change path
+        '''
         scraper = LaundryScraper(laundry_rooms[option][1], "./")
     scraper.scrape()
