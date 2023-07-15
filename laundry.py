@@ -29,12 +29,16 @@ def get_status(section):
     return status
 
 
-def clean_contents(p_tag):
+def clean_contents(p_tag, duration=None):
     p_contents = p_tag.get_attribute('innerHTML')
 
     # Remove HTML tags and links using regular expressions
     p_contents = re.sub('<.*?>', '', p_contents)
     p_contents = p_contents.replace('Report a fault', '')
+
+    # If duration is not None, remove it from the text
+    if duration:
+        p_contents = p_contents.replace(duration, '', 1)
 
     # Remove invisible line breaks but maintain line breaks between sentences
     p_contents = p_contents.replace('<br>', '').replace('</small>', '</small>\n')
@@ -42,7 +46,7 @@ def clean_contents(p_tag):
     return p_contents.strip()
 
 
-def process_sections(sections):
+def process_sections(driver, sections):
     status_counter = Counter()
     completion_times = []
 
@@ -50,7 +54,6 @@ def process_sections(sections):
     for section in sections:
         title = section.find_element(By.CSS_SELECTOR, 'div.accordion__title').text
         status = get_status(section)
-        p_contents = clean_contents(section.find_element(By.CSS_SELECTOR, 'p'))
 
         # Increment the counter for the status
         status_counter[status] += 1
@@ -58,13 +61,16 @@ def process_sections(sections):
         # If in use, extract duration
         duration = None
         if status == 'In Use':
-            span_tags = section.find_elements(By.TAG_NAME, 'span')
+            span_tags = section.find_elements(By.CSS_SELECTOR, 'p span')
 
             # Loop through the <span> tags and find the one containing "mins"
             for span_tag in span_tags:
-                if 'mins' in span_tag.text:
-                    duration = span_tag.text.strip()
+                text = driver.execute_script("return arguments[0].textContent;", span_tag)
+                if 'mins' in text:
+                    duration = text.strip()
                     break
+
+        p_contents = clean_contents(section.find_element(By.CSS_SELECTOR, 'p'), duration)
 
         # Extract expected completion time
         if 'Expected completion time' in p_contents:
@@ -112,7 +118,7 @@ class LaundryScraper:
             washer_sections = self.driver.find_elements(By.CSS_SELECTOR,
                                                         'section.accordions--circuit-view:nth-of-type(1) div.accordion')
 
-            washer_status_counter, washer_completion_times = process_sections(washer_sections)
+            washer_status_counter, washer_completion_times = process_sections(self.driver, washer_sections)
 
             # Click on the anchor tag with text "View Dryers"
             dryers_button = WebDriverWait(self.driver, 10).until(
@@ -124,7 +130,7 @@ class LaundryScraper:
             dryer_sections = self.driver.find_elements(By.CSS_SELECTOR,
                                                        'section.accordions--circuit-view:nth-of-type(2) div.accordion')
 
-            dryer_status_counter, dryer_completion_times = process_sections(dryer_sections)
+            dryer_status_counter, dryer_completion_times = process_sections(self.driver, dryer_sections)
 
             # Print the washer status counts
             print("\nWasher Status Counts:")
