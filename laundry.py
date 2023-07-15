@@ -164,9 +164,13 @@ if __name__ == "__main__":
     # Check if running on Android
     is_android = hasattr(sys, 'getandroidapilevel')
 
+    '''
+    Format: Key: [List]
+    Key: Numerical ID
+    [List]: ["name", "target_url_to_scrape"]
+    '''
     laundry_rooms = {
         1: ["Murano Street Csb Laundry", "https://www.circuit.co.uk/circuit-view/laundry-site/?site=6240"],
-        2: ["Murano Street Cheviot Laundry", "https://www.circuit.co.uk/circuit-view/laundry-site/?site=6239"]
     }
 
     print('Laundry Scrapper')
