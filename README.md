@@ -48,7 +48,7 @@ Run the following commands
 ```commandline
 yes | pkg update -y && yes | pkg upgrade -y
 pkg install python python-pip
-pip install selenium
+pip install selenium==4.9.1
 
 yes | pkg install x11-repo -y
 yes | pkg install tur-repo -y
